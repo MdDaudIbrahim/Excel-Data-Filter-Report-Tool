@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Data Filter & Report Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .table-container::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #555; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+        th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0; 
+            z-index: 10; 
+        }
+        .column-header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-text-wrapper {
+            flex-grow: 1;
+            margin-right: 8px; 
+        }
+        .filter-sort-icons {
+            display: flex;
+            align-items: center;
+        }
+        .filter-btn, .sort-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: #555;
+        }
+        .filter-btn:hover, .sort-btn:hover {
+            color: #007bff;
+        }
+        .filter-btn.active {
+            color: #007bff;
+            font-weight: bold;
+        }
+        .column-filter-input {
+            width: 100%;
+            padding: 6px 8px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 0.875rem;
+        }
+        .column-filter-input:focus {
+            border-color: #80bdff; outline: 0; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        .loader {
+            border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%;
+            width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .modal {
+            position: fixed; inset: 0; background-color: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; padding: 1rem;
+        }
+        .modal-content {
+            background-color: white; padding: 20px; border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 90%; max-width: 450px; display: flex; flex-direction: column;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;}
+        .modal-title { font-size: 1.25rem; font-weight: 600; }
+        .modal-close-btn { background:none; border:none; font-size:1.5rem; cursor:pointer; color: #777; }
+        .modal-body { margin-bottom: 15px; }
+        .modal-search-input { width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:10px; }
+        .modal-checkbox-list { max-height: 250px; overflow-y: auto; border:1px solid #eee; padding:10px; border-radius:4px; }
+        .modal-checkbox-item { display:block; margin-bottom:5px; }
+        .modal-checkbox-item label { display:flex; align-items:center; font-weight:normal; font-size:0.9rem; }
+        .modal-checkbox-item input { margin-right:8px; }
+        .modal-actions { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
+        .modal-footer { display:flex; justify-content:flex-end; gap:10px; }
+
+        .sort-icon-asc::after { content: " ▲"; font-size: 0.7em; }
+        .sort-icon-desc::after { content: " ▼"; font-size: 0.7em; }
+
+        #sheetTabsContainer {
+            margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0;
+            display: flex; flex-wrap: wrap; gap: 0.5rem;
+        }
+        .sheet-tab {
+            padding: 0.5rem 1rem; cursor: pointer; border: 1px solid #cbd5e0; border-bottom: none;
+            border-radius: 0.375rem 0.375rem 0 0; background-color: #f7fafc; color: #4a5568;
+            font-size: 0.875rem; transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .sheet-tab:hover { background-color: #edf2f7; color: #2d3748; }
+        .sheet-tab.active {
+            background-color: #ffffff; color: #2b6cb0; border-color: #cbd5e0 #cbd5e0 #ffffff;
+            position: relative; top: 1px; font-weight: 600;
+        }
+        #pasteDataContainer {
+            margin-top: 1rem; padding: 1rem; border: 1px dashed #cbd5e0; border-radius: 0.375rem;
+        }
+        #pasteTextarea {
+            width: 100%; min-height: 100px; padding: 0.5rem; border: 1px solid #cbd5e0;
+            border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="container mx-auto max-w-7xl bg-white p-6 md:p-8 rounded-xl shadow-xl">
+
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-700">Excel Data Filter & Report Tool</h1>
+            <p class="text-gray-500 mt-2">Upload, switch sheets, view values (formulas preserved on export), filter, paste, copy, and export.</p>
+        </header>
+
+        <section id="uploadSection" class="mb-8 p-6 bg-gray-50 rounded-lg shadow">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">1. Upload Excel File</h2>
+            <input type="file" id="excelFile" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
+            <div id="messageArea" class="mt-3 text-sm"></div>
+            <div id="loader" class="loader hidden"></div>
+        </section>
+
+        <section id="sheetSelectionSection" class="mb-4 hidden">
+             <h2 class="text-xl font-semibold text-gray-700 mb-3">Select Sheet</h2>
+            <div id="sheetTabsContainer"></div>
+        </section>
+
+        <section id="dataSection" class="mb-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">2. Filter and View Data (<span id="currentSheetName" class="font-normal"></span>)</h2>
+            <p class="text-sm text-gray-500 mb-4">Data values are shown as formatted. Formulas are preserved on export but do not recalculate here.</p>
+            <div id="tableContainer" class="table-container max-h-[600px] overflow-auto rounded-lg shadow border border-gray-200">
+                <table id="dataTable" class="min-w-full bg-white">
+                    <thead id="tableHeader"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <p id="noDataMessage" class="text-center text-gray-500 py-4 hidden">No data to display or matches your filter.</p>
+        </section>
+
+        <section id="actionsReportSection" class="mb-8 hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-6 bg-green-50 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-3">3. Actions</h2>
+                    <div class="space-y-3">
+                        <button id="exportButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out">
+                            Export Current Sheet
+                        </button>
+                        <button id="copyButton" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out">
+                            Copy Filtered Data
+                        </button>
+                        <button id="showPasteAreaButton" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out">
+                            Paste Data into Sheet
+                        </button>
+                    </div>
+                    <div id="pasteDataContainer" class="hidden mt-4 p-4 border border-dashed border-gray-300 rounded-md">
+                        <h3 class="text-md font-semibold text-gray-700 mb-2">Paste Tab-Separated Data Below:</h3>
+                        <textarea id="pasteTextarea" rows="5" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Paste data here..."></textarea>
+                        <div class="mt-3 flex justify-end gap-2">
+                            <button id="cancelPasteButton" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 text-sm">Cancel</button>
+                            <button id="applyPasteButton" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Apply Pasted Data</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 bg-indigo-50 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-3">4. Quick Report (<span id="reportSheetName" class="font-normal"></span>)</h2>
+                    <div id="reportArea" class="text-gray-600 space-y-2">
+                        <p>Upload and filter data to see a report.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="filterModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="filterModalTitle" class="modal-title">Filter Column</h3>
+                <button id="filterModalCloseBtn" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="filterModalSearch" class="modal-search-input" placeholder="Search values...">
+                <div id="filterModalCheckboxes" class="modal-checkbox-list"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="filterModalSelectAll" class="text-sm text-blue-600 hover:underline">Select All</button>
+                <button id="filterModalDeselectAll" class="text-sm text-blue-600 hover:underline ml-2">Deselect All</button>
+            </div>
+            <div class="modal-footer">
+                <button id="filterModalCancel" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
+                <button id="filterModalApply" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const excelFileInput = document.getElementById('excelFile');
+        const messageArea = document.getElementById('messageArea');
+        const loader = document.getElementById('loader');
+        const sheetSelectionSection = document.getElementById('sheetSelectionSection'); 
+        const sheetTabsContainer = document.getElementById('sheetTabsContainer'); 
+        const currentSheetNameDisplay = document.getElementById('currentSheetName'); 
+        const reportSheetNameDisplay = document.getElementById('reportSheetName'); 
+        const dataSection = document.getElementById('dataSection');
+        const tableContainer = document.getElementById('tableContainer');
+        const tableHeader = document.getElementById('tableHeader');
+        const tableBody = document.getElementById('tableBody');
+        const noDataMessage = document.getElementById('noDataMessage');
+        const actionsReportSection = document.getElementById('actionsReportSection');
+        const exportButton = document.getElementById('exportButton');
+        const copyButton = document.getElementById('copyButton'); 
+        const reportArea = document.getElementById('reportArea');
+        const showPasteAreaButton = document.getElementById('showPasteAreaButton');
+        const pasteDataContainer = document.getElementById('pasteDataContainer');
+        const pasteTextarea = document.getElementById('pasteTextarea');
+        const applyPasteButton = document.getElementById('applyPasteButton');
+        const cancelPasteButton = document.getElementById('cancelPasteButton');
+        const filterModal = document.getElementById('filterModal');
+        const filterModalTitle = document.getElementById('filterModalTitle');
+        const filterModalCloseBtn = document.getElementById('filterModalCloseBtn');
+        const filterModalSearch = document.getElementById('filterModalSearch');
+        const filterModalCheckboxes = document.getElementById('filterModalCheckboxes');
+        const filterModalSelectAll = document.getElementById('filterModalSelectAll');
+        const filterModalDeselectAll = document.getElementById('filterModalDeselectAll');
+        const filterModalCancel = document.getElementById('filterModalCancel');
+        const filterModalApply = document.getElementById('filterModalApply');
+
+        // Data stores
+        let currentWorkbook = null; 
+        let currentSheetName = "";  
+        // originalData will now store an array of arrays of cell objects: {v: rawValue, w: formattedText, f?: formulaString}
+        let originalData = []; 
+        // filteredData will also store array of arrays of cell objects, but only for display/export
+        let filteredData = []; 
+        let activeTextFilters = {}; 
+        let activeValueFilters = {}; 
+        let currentFilteringColumn = -1; 
+
+        // --- Event Listeners ---
+        excelFileInput.addEventListener('change', handleFileUpload);
+        exportButton.addEventListener('click', handleExport);
+        copyButton.addEventListener('click', handleCopyData); 
+        showPasteAreaButton.addEventListener('click', togglePasteArea);
+        applyPasteButton.addEventListener('click', handleApplyPastedData);
+        cancelPasteButton.addEventListener('click', () => togglePasteArea(false));
+        filterModalCloseBtn.addEventListener('click', closeFilterModal);
+        filterModalCancel.addEventListener('click', closeFilterModal);
+        filterModalApply.addEventListener('click', applyModalFilter);
+        filterModalSearch.addEventListener('input', handleModalSearch);
+        filterModalSelectAll.addEventListener('click', () => toggleAllModalCheckboxes(true));
+        filterModalDeselectAll.addEventListener('click', () => toggleAllModalCheckboxes(false));
+
+        // --- File Upload ---
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) { showMessage('No file selected.', 'text-yellow-600'); return; }
+            const validExtensions = ['.xlsx', '.xls'];
+            if (!validExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
+                showMessage('Invalid file type. Please upload an Excel file.', 'text-red-600');
+                resetUI(); return;
+            }
+            showMessage('Processing file...', 'text-blue-600');
+            loader.classList.remove('hidden');
+            resetUI(); 
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    // Reading with cellFormula: true to get 'f' field, cellNF for 'w'
+                    currentWorkbook = XLSX.read(data, { type: 'array', cellFormula: true, cellNF: true }); 
+                    
+                    if (!currentWorkbook || currentWorkbook.SheetNames.length === 0) {
+                        throw new Error("No sheets found in the Excel file or workbook is invalid.");
+                    }
+                    
+                    renderSheetTabs(currentWorkbook.SheetNames);
+                    loadSheetData(currentWorkbook.SheetNames[0]); 
+                    
+                    sheetSelectionSection.classList.remove('hidden');
+                    dataSection.classList.remove('hidden');
+                    actionsReportSection.classList.remove('hidden');
+                    showMessage(`File "${file.name}" processed. Displaying values; formulas preserved for export.`, 'text-green-600');
+
+                } catch (error) {
+                    console.error("Error processing Excel file:", error);
+                    showMessage(`Error: ${error.message || 'Could not process the Excel file.'}`, 'text-red-600');
+                    resetUI(); 
+                } finally {
+                    loader.classList.add('hidden');
+                }
+            };
+            reader.onerror = () => { 
+                showMessage('Error reading the file.', 'text-red-600');
+                loader.classList.add('hidden');
+                resetUI();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- Sheet Handling ---
+        function renderSheetTabs(sheetNames) {
+            sheetTabsContainer.innerHTML = ''; 
+            sheetNames.forEach(name => {
+                const tab = document.createElement('button');
+                tab.className = 'sheet-tab';
+                tab.textContent = name;
+                tab.dataset.sheetName = name;
+                tab.onclick = () => loadSheetData(name);
+                sheetTabsContainer.appendChild(tab);
+            });
+        }
+
+        function loadSheetData(sheetName) {
+            if (!currentWorkbook || !currentWorkbook.Sheets[sheetName]) {
+                showMessage(`Error: Sheet "${sheetName}" not found in the workbook.`, 'text-red-600');
+                originalData = []; // Clear data if sheet is not found
+                setupTable(); // Attempt to clear/update table
+                return;
+            }
+            currentSheetName = sheetName;
+            currentSheetNameDisplay.textContent = sheetName; 
+            reportSheetNameDisplay.textContent = sheetName; 
+
+            const tabs = sheetTabsContainer.querySelectorAll('.sheet-tab');
+            tabs.forEach(tab => {
+                if (tab.dataset.sheetName === sheetName) tab.classList.add('active');
+                else tab.classList.remove('active');
+            });
+
+            const worksheet = currentWorkbook.Sheets[sheetName];
+            const newOriginalData = [];
+            if (!worksheet || !worksheet['!ref']) {
+                 showMessage(`Sheet "${sheetName}" is empty or invalid.`, 'text-yellow-600');
+            } else {
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    const row = [];
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const cell_address = { c: C, r: R };
+                        const cell_ref = XLSX.utils.encode_cell(cell_address);
+                        const cell = worksheet[cell_ref]; // This is the raw cell object from SheetJS
+                        
+                        let cellData = { v: undefined, w: "", f: undefined }; // Default cell object structure
+                        if (cell) {
+                            cellData.v = cell.v; // Raw value
+                            cellData.w = cell.w !== undefined ? String(cell.w) : (cell.v !== undefined ? String(cell.v) : ""); // Formatted text or raw value as string
+                            if (cell.f) cellData.f = cell.f; // Formula string
+                        }
+                        row.push(cellData);
+                    }
+                    newOriginalData.push(row);
+                }
+            }
+            originalData = newOriginalData; // Assign the newly parsed data
+            
+            resetAllFilters(); 
+            setupTable(); 
+            togglePasteArea(false); 
+            showMessage(`Displaying data from sheet: "${sheetName}". Values shown; formulas preserved for export.`, 'text-blue-600');
+        }
+
+        // --- Paste Data Logic ---
+        function togglePasteArea(show) {
+            if (show === undefined) { 
+                pasteDataContainer.classList.toggle('hidden');
+            } else if (show) {
+                pasteDataContainer.classList.remove('hidden');
+            } else {
+                pasteDataContainer.classList.add('hidden');
+                pasteTextarea.value = ''; 
+            }
+        }
+
+        function handleApplyPastedData() {
+            const pastedText = pasteTextarea.value.trim();
+            if (!pastedText) {
+                showMessage('Paste area is empty. Nothing to apply.', 'text-yellow-600', true); return;
+            }
+            if (!currentSheetName || originalData === null) { // originalData can be [] for empty sheet
+                showMessage('No active sheet to paste data into. Please load a sheet first.', 'text-red-600', true); return;
+            }
+
+            try {
+                const rawPastedRows = pastedText.split('\n').map(line => line.split('\t'));
+                const newDataRowsAsCellObjects = rawPastedRows.map(row => 
+                    row.map(val => ({ v: val, w: String(val) })) // Pasted data is treated as values, not formulas
+                );
+                
+                if (newDataRowsAsCellObjects.length === 0) {
+                    showMessage('No valid data rows found in pasted text.', 'text-yellow-600', true); return;
+                }
+
+                if (originalData.length === 0) { 
+                    originalData = newDataRowsAsCellObjects;
+                } else {
+                    originalData.push(...newDataRowsAsCellObjects);
+                }
+                
+                // Update the in-memory workbook's sheet with the new combined data
+                if (currentWorkbook && currentWorkbook.Sheets[currentSheetName]) {
+                    // Convert our cell objects {v,w,f} to what aoa_to_sheet expects (values or simple {v,f} objects)
+                    const dataForSheetJS = originalData.map(row => 
+                        row.map(cellObj => {
+                            if (cellObj.f) return { v: cellObj.v, f: cellObj.f }; // Preserve formula
+                            return cellObj.v; // Just the value for others (SheetJS will infer type)
+                        })
+                    );
+                    const newSheet = XLSX.utils.aoa_to_sheet(dataForSheetJS);
+                    currentWorkbook.Sheets[currentSheetName] = newSheet;
+                    // Log to confirm update
+                    console.log(`[Paste] Workbook sheet ${currentSheetName} updated. New range:`, currentWorkbook.Sheets[currentSheetName]['!ref']);
+                }
+
+                setupTable(); 
+                togglePasteArea(false); 
+                showMessage(`${newDataRowsAsCellObjects.length} row(s) pasted and applied to sheet "${currentSheetName}". Pasted data treated as values.`, 'text-green-600', true);
+
+            } catch (error) {
+                console.error("Error applying pasted data:", error);
+                showMessage(`Error applying pasted data: ${error.message}`, 'text-red-600', true);
+            }
+        }
+
+        function resetSectionsOnSheetChange() { 
+            tableHeader.innerHTML = '';
+            tableBody.innerHTML = '';
+            noDataMessage.classList.add('hidden');
+        }
+        
+        function resetAllFilters() {
+            activeTextFilters = {};
+            activeValueFilters = {};
+            const allFilterBtns = tableHeader.querySelectorAll('.filter-btn.active');
+            allFilterBtns.forEach(btn => btn.classList.remove('active'));
+            const allTextFilterInputs = tableHeader.querySelectorAll('.column-filter-input');
+            allTextFilterInputs.forEach(input => input.value = '');
+        }
+
+        function setupTable() {
+            resetSectionsOnSheetChange(); 
+            if (!originalData.length) {
+                noDataMessage.textContent = `Sheet "${currentSheetName}" is empty or has no data.`;
+                noDataMessage.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                updateReport([]); 
+                return;
+            }
+            tableContainer.classList.remove('hidden');
+            // originalData[0] is an array of cell objects. We need their 'w' for display as headers.
+            const headerCells = originalData[0] || [];
+            const headerTexts = headerCells.map(cellObj => cellObj.w !== undefined ? cellObj.w : (cellObj.v !== undefined ? String(cellObj.v) : ""));
+            setupTableHeaders(headerTexts); 
+            applyAllFilters(); 
+        }
+
+        function setupTableHeaders(headerTextsArray) {
+            tableHeader.innerHTML = ''; 
+            const headerRow = document.createElement('tr');
+            
+            if (!headerTextsArray || headerTextsArray.length === 0) {
+                const th = document.createElement('th');
+                th.textContent = `No headers found in sheet: "${currentSheetName}"`;
+                headerRow.appendChild(th);
+                tableHeader.appendChild(headerRow);
+                return;
+            }
+
+            headerTextsArray.forEach((headerText, index) => {
+                const th = document.createElement('th');
+                const headerContentDiv = document.createElement('div');
+                headerContentDiv.className = 'column-header-content';
+                const textWrapper = document.createElement('div');
+                textWrapper.className = 'header-text-wrapper';
+                textWrapper.textContent = headerText === null || typeof headerText === 'undefined' ? `Col ${index + 1}` : String(headerText);
+                const iconsDiv = document.createElement('div');
+                iconsDiv.className = 'filter-sort-icons';
+                const filterBtn = document.createElement('button');
+                filterBtn.className = 'filter-btn';
+                filterBtn.innerHTML = '&#x1F5B9;'; 
+                filterBtn.title = 'Advanced Filter';
+                filterBtn.dataset.columnIndex = index;
+                filterBtn.onclick = () => openFilterModal(index);
+                iconsDiv.appendChild(filterBtn);
+                const sortAscBtn = document.createElement('button');
+                sortAscBtn.className = 'sort-btn sort-icon-asc';
+                sortAscBtn.title = 'Sort Ascending (Future)';
+                iconsDiv.appendChild(sortAscBtn);
+                const sortDescBtn = document.createElement('button');
+                sortDescBtn.className = 'sort-btn sort-icon-desc';
+                sortDescBtn.title = 'Sort Descending (Future)';
+                iconsDiv.appendChild(sortDescBtn);
+                headerContentDiv.appendChild(textWrapper);
+                headerContentDiv.appendChild(iconsDiv);
+                th.appendChild(headerContentDiv);
+                const textFilterInput = document.createElement('input');
+                textFilterInput.type = 'text';
+                textFilterInput.placeholder = `Filter...`;
+                textFilterInput.className = 'column-filter-input';
+                textFilterInput.dataset.columnIndex = index;
+                textFilterInput.oninput = handleTextFilterInput;
+                th.appendChild(textFilterInput);
+                headerRow.appendChild(th);
+            });
+            tableHeader.appendChild(headerRow);
+        }
+        
+        function updateFilterButtonActiveState(columnIndex, isActive) {
+            const filterBtn = tableHeader.querySelector(`.filter-btn[data-column-index="${columnIndex}"]`);
+            if (filterBtn) {
+                if (isActive) filterBtn.classList.add('active');
+                else filterBtn.classList.remove('active');
+            }
+        }
+
+        function handleTextFilterInput(event) {
+            const input = event.target;
+            const columnIndex = parseInt(input.dataset.columnIndex);
+            const filterValue = input.value.toLowerCase().trim();
+            if (filterValue) activeTextFilters[columnIndex] = filterValue;
+            else delete activeTextFilters[columnIndex];
+            applyAllFilters();
+        }
+
+        function openFilterModal(columnIndex) {
+            currentFilteringColumn = columnIndex;
+            if (!originalData || !originalData[0] || !originalData[0][columnIndex]) {
+                showMessage('Cannot open filter: No header data available for this column.', 'text-red-600', true);
+                return;
+            }
+            const headerCell = originalData[0][columnIndex];
+            const headerText = headerCell.w || String(headerCell.v) || `Column ${columnIndex + 1}`;
+            filterModalTitle.textContent = `Filter: ${headerText} (Sheet: ${currentSheetName})`;
+
+            const uniqueValues = new Set();
+            if (originalData.length > 1) { 
+                for (let i = 1; i < originalData.length; i++) { 
+                    if (originalData[i] && originalData[i][columnIndex]) {
+                         const cell = originalData[i][columnIndex];
+                         uniqueValues.add(cell.w !== undefined ? cell.w : (cell.v !== undefined ? String(cell.v) : ""));
+                    } else {
+                         uniqueValues.add(""); 
+                    }
+                }
+            }
+            const sortedUniqueValues = Array.from(uniqueValues).sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric: true, sensitivity: 'base'}));
+            filterModalCheckboxes.innerHTML = '';
+            const currentSelections = activeValueFilters[columnIndex] || new Set();
+
+            sortedUniqueValues.forEach(value => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'modal-checkbox-item';
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = value;
+                checkbox.checked = currentSelections.size === 0 || currentSelections.has(value); 
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(value === "" ? "(Blanks)" : value));
+                itemDiv.appendChild(label);
+                filterModalCheckboxes.appendChild(itemDiv);
+            });
+            
+            filterModalSearch.value = '';
+            filterModal.classList.remove('hidden');
+        }
+
+        function closeFilterModal() {
+            filterModal.classList.add('hidden');
+            currentFilteringColumn = -1;
+        }
+
+        function applyModalFilter() {
+            const selectedValues = new Set();
+            const allCheckboxes = filterModalCheckboxes.querySelectorAll('input[type="checkbox"]');
+            let allVisibleAreSelected = true; 
+            allCheckboxes.forEach(cb => {
+                const itemIsVisible = cb.closest('.modal-checkbox-item').style.display !== 'none';
+                if (itemIsVisible) {
+                    if (cb.checked) selectedValues.add(cb.value);
+                    else allVisibleAreSelected = false;
+                } else if (cb.checked) { 
+                    selectedValues.add(cb.value);
+                }
+            });
+            const totalVisibleValuesInModal = Array.from(filterModalCheckboxes.querySelectorAll('.modal-checkbox-item')).filter(item => item.style.display !== 'none').length;
+            if (selectedValues.size === 0 || (allVisibleAreSelected && selectedValues.size === totalVisibleValuesInModal && filterModalSearch.value.trim() === '')) {
+                 delete activeValueFilters[currentFilteringColumn];
+                 updateFilterButtonActiveState(currentFilteringColumn, false);
+            } else {
+                activeValueFilters[currentFilteringColumn] = selectedValues;
+                updateFilterButtonActiveState(currentFilteringColumn, true);
+            }
+            applyAllFilters();
+            closeFilterModal();
+        }
+
+        function handleModalSearch() {
+            const searchTerm = filterModalSearch.value.toLowerCase();
+            const checkboxes = filterModalCheckboxes.querySelectorAll('.modal-checkbox-item');
+            checkboxes.forEach(item => {
+                const labelText = item.textContent.toLowerCase();
+                if (labelText.includes(searchTerm)) item.style.display = 'block';
+                else item.style.display = 'none';
+            });
+        }
+
+        function toggleAllModalCheckboxes(select) {
+            const checkboxes = filterModalCheckboxes.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                if (cb.closest('.modal-checkbox-item').style.display !== 'none') { 
+                    cb.checked = select;
+                }
+            });
+        }
+
+        function applyAllFilters() {
+            if (originalData.length === 0) { 
+                filteredData = [];
+                renderTableBody([]);
+                updateReport(filteredData);
+                return;
+            }
+            const headersRowObjects = originalData[0] ? originalData[0] : []; // Array of cell objects
+            const dataContentRowsObjects = originalData.length > 1 ? originalData.slice(1) : []; // Array of arrays of cell objects
+
+            const newFilteredRowsObjects = dataContentRowsObjects.filter(rowOfCellObjects => {
+                if (!rowOfCellObjects) return false; 
+                for (const colIndexStr in activeTextFilters) {
+                    const colIndex = parseInt(colIndexStr);
+                    const filterValue = activeTextFilters[colIndex];
+                    const cellObj = rowOfCellObjects[colIndex];
+                    const cellFormattedText = cellObj && cellObj.w !== undefined ? String(cellObj.w).toLowerCase() : 
+                                           (cellObj && cellObj.v !== undefined ? String(cellObj.v).toLowerCase() : "");
+                    if (!cellFormattedText.includes(filterValue)) return false;
+                }
+                for (const colIndexStr in activeValueFilters) {
+                    const colIndex = parseInt(colIndexStr);
+                    const selectedValuesSet = activeValueFilters[colIndex];
+                    if (selectedValuesSet && selectedValuesSet.size > 0) { 
+                        const cellObj = rowOfCellObjects[colIndex];
+                        const cellFormattedText = cellObj && cellObj.w !== undefined ? String(cellObj.w) : 
+                                               (cellObj && cellObj.v !== undefined ? String(cellObj.v) : "");
+                        if (!selectedValuesSet.has(cellFormattedText)) return false;
+                    }
+                }
+                return true;
+            });
+
+            filteredData = [headersRowObjects, ...newFilteredRowsObjects]; 
+            renderTableBody(newFilteredRowsObjects); // Pass only data rows (as objects)
+            updateReport(filteredData); 
+        }
+
+        function renderTableBody(dataRowsOfCellObjects) {
+            tableBody.innerHTML = '';
+            if (!dataRowsOfCellObjects || dataRowsOfCellObjects.length === 0) {
+                noDataMessage.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                
+                let msg;
+                const hasActiveFilters = Object.keys(activeTextFilters).length > 0 || Object.keys(activeValueFilters).length > 0;
+                
+                // Check if originalData (the source before filtering) is effectively empty or only has a header
+                let isSourceEffectivelyEmpty = true;
+                if (originalData && originalData.length > 0) {
+                    // Consider source empty if it's just one row and that row is entirely blank (typical for empty header)
+                    if (originalData.length === 1 && originalData[0] && originalData[0].every(cell => (cell.v === undefined || cell.v === null || cell.v === "") && (cell.w === undefined || cell.w === null || cell.w === ""))) {
+                        isSourceEffectivelyEmpty = true;
+                    } else if (originalData.length >= 1) { // Has at least one row that might be a header or data
+                        isSourceEffectivelyEmpty = false; 
+                    }
+                }
+                 // Check if there are actual data rows in the source (beyond a potential header)
+                const sourceHasDataRows = originalData && originalData.length > 1;
+
+                if (hasActiveFilters) {
+                    if (isSourceEffectivelyEmpty || !sourceHasDataRows) {
+                        // If the source itself is empty or has no data rows, filtering is moot.
+                        msg = `Sheet "${currentSheetName}" is empty or has no data rows to filter.`;
+                    } else {
+                        // Source has data rows, but filters yielded no results.
+                        msg = `No data rows match your current filter criteria on sheet "${currentSheetName}".`;
+                    }
+                } else { // No active filters
+                    if (isSourceEffectivelyEmpty) {
+                        msg = `Sheet "${currentSheetName}" is empty or contains no data.`;
+                    } else if (!sourceHasDataRows) {
+                        // Has a header row, but no data rows following it.
+                        msg = `Sheet "${currentSheetName}" has headers but no data rows.`;
+                    } else {
+                        // This state (empty display with no filters, but sourceHasDataRows is true) should ideally not be reached.
+                        // It implies an issue in rendering or data processing if dataRowsOfCellObjects is empty.
+                        // However, this block is for when dataRowsOfCellObjects IS empty.
+                        msg = `No data to display on sheet "${currentSheetName}". This might indicate an issue if data was expected.`;
+                    }
+                }
+                noDataMessage.textContent = msg;
+                return;
+            }
+            noDataMessage.classList.add('hidden');
+            tableContainer.classList.remove('hidden');
+
+            dataRowsOfCellObjects.forEach(rowArrayOfCellObjects => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50';
+                if (Array.isArray(rowArrayOfCellObjects)) {
+                    rowArrayOfCellObjects.forEach(cellObj => {
+                        const td = document.createElement('td');
+                        td.className = 'p-3 text-sm text-gray-600 whitespace-nowrap';
+                        // Display formatted text 'w', fallback to 'v'
+                        td.textContent = cellObj.w !== undefined ? cellObj.w : (cellObj.v !== undefined ? String(cellObj.v) : '');
+                        tr.appendChild(td);
+                    });
+                }
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function handleExport() {
+            if (!filteredData || filteredData.length === 0) {
+                showMessage(`No data on sheet "${currentSheetName}" to export.`, 'text-yellow-600', true); return;
+            }
+            // filteredData is an array of rows, where each row is an array of cell objects {v,w,f}
+            // We need to convert this to an array of arrays of SheetJS cell objects for export
+            const dataToExportForSheetJS = filteredData.map(rowOfCellObjects => {
+                return rowOfCellObjects.map(cellObj => {
+                    if (cellObj.f) { // If formula exists, prioritize it
+                        return { v: cellObj.v, f: cellObj.f, t: cellObj.t || (typeof cellObj.v === 'number' ? 'n' : 's') }; 
+                    } else if (cellObj.v !== undefined) { // If value exists
+                         // Let SheetJS infer type, or explicitly set if needed
+                        return { v: cellObj.v, t: cellObj.t || (typeof cellObj.v === 'number' ? 'n' : (typeof cellObj.v === 'boolean' ? 'b' : 's')) };
+                    }
+                    return null; // For empty cells
+                });
+            });
+            
+            if (dataToExportForSheetJS.length === 0 || (dataToExportForSheetJS.length === 1 && dataToExportForSheetJS[0].every(c => c === null))) {
+                 showMessage(`No actual data rows on sheet "${currentSheetName}" to export.`, 'text-yellow-600', true); return;
+            }
+
+            try {
+                // Create worksheet directly from the array of arrays of SheetJS cell objects
+                const worksheet = {};
+                const range = {s: {c:0, r:0}, e: {c:0, r:dataToExportForSheetJS.length - 1}};
+                dataToExportForSheetJS.forEach((row, R) => {
+                    if (row.length -1 > range.e.c) range.e.c = row.length - 1;
+                    row.forEach((cell, C) => {
+                        if (cell === null) return; // Skip empty cells from originalData structure
+                        const cellRef = XLSX.utils.encode_cell({r:R, c:C});
+                        worksheet[cellRef] = cell;
+                    });
+                });
+                if (dataToExportForSheetJS.length === 0) range.e = {c:0,r:0}; // Handle empty sheet case
+                worksheet['!ref'] = XLSX.utils.encode_range(range);
+
+
+                const newWorkbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(newWorkbook, worksheet, currentSheetName.replace(/[\/\\?%*:|"<>]/g, '_').substring(0,30)); 
+                
+                const originalFileNameBase = excelFileInput.files[0] ? excelFileInput.files[0].name.split('.')[0] : 'ExportedData';
+                const exportSheetNamePart = currentSheetName.replace(/[^a-zA-Z0-9]/g, '_').substring(0,20);
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                XLSX.writeFile(newWorkbook, `${originalFileNameBase}_${exportSheetNamePart}_filtered_${timestamp}.xlsx`);
+                showMessage(`Sheet "${currentSheetName}" exported successfully! Formulas preserved.`, 'text-green-600', true);
+            } catch (error) {
+                console.error("Error exporting:", error);
+                showMessage(`Error exporting sheet "${currentSheetName}": ${error.message}`, 'text-red-600', true);
+            }
+        }
+
+        function handleCopyData() {
+            if (!filteredData || filteredData.length === 0) {
+                showMessage(`No data on sheet "${currentSheetName}" to copy.`, 'text-yellow-600', true); return;
+            }
+             // filteredData is [headerRowOfCellObjects, ...dataRowsOfCellObjects]
+            const dataToCopy = filteredData.map(rowOfCellObjects => 
+                rowOfCellObjects.map(cellObj => cellObj.w !== undefined ? cellObj.w : (cellObj.v !== undefined ? String(cellObj.v) : ''))
+            );
+
+            if (dataToCopy.length === 0 || (dataToCopy.length === 1 && dataToCopy[0].every(c => c === ''))) {
+                 showMessage(`No actual data rows on sheet "${currentSheetName}" to copy.`, 'text-yellow-600', true); return;
+            }
+            const tsvString = dataToCopy.map(row => Array.isArray(row) ? row.join('\t') : '').join('\n');
+            const textarea = document.createElement('textarea');
+            textarea.value = tsvString;
+            textarea.style.position = 'fixed'; 
+            textarea.style.left = '-9999px'; 
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) showMessage(`Filtered data from sheet "${currentSheetName}" copied!`, 'text-green-600', true);
+                else showMessage('Failed to copy data.', 'text-red-600', true);
+            } catch (err) {
+                console.error('Error copying data:', err);
+                showMessage('Error copying data. See console.', 'text-red-600', true);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function updateReport(dataForReport) { // dataForReport is array of arrays of cell objects
+            if (!dataForReport || dataForReport.length === 0 || !dataForReport[0]) {
+                reportArea.innerHTML = `<p>No data loaded for report on sheet "${currentSheetName}".</p>`; return;
+            }
+            const headersRowObjects = dataForReport[0];
+            const numCols = Array.isArray(headersRowObjects) ? headersRowObjects.length : 0;
+            const numRows = dataForReport.length > 1 ? dataForReport.length - 1 : 0;
+            reportArea.innerHTML = `<p><span class="font-semibold">Columns:</span> ${numCols}</p>
+                                <p><span class="font-semibold">Filtered Rows:</span> ${numRows}</p>
+                                <p class="text-xs text-gray-500 mt-2">Based on current filters for sheet "${currentSheetName}".</p>`;
+        }
+        
+        function showMessage(msg, styleClass = 'text-gray-700', isActionMessage = false) {
+             const mainMsgArea = document.getElementById('messageArea');
+            if (!isActionMessage && mainMsgArea) {
+                 mainMsgArea.textContent = msg;
+                 mainMsgArea.className = `mt-3 text-sm ${styleClass}`;
+            } else if (isActionMessage) {
+                const tempMsgDiv = document.createElement('div');
+                tempMsgDiv.textContent = msg;
+                tempMsgDiv.className = `fixed top-5 right-5 p-3 rounded-lg shadow-lg text-white ${styleClass.includes('red') ? 'bg-red-500' : styleClass.includes('yellow') ? 'bg-yellow-500' : 'bg-green-500'} z-[1001]`;
+                document.body.appendChild(tempMsgDiv);
+                setTimeout(() => tempMsgDiv.remove(), 3500);
+            }
+        }
+
+        function resetUI() {
+            excelFileInput.value = ''; 
+            currentWorkbook = null;
+            currentSheetName = "";
+            originalData = [];
+            filteredData = [];
+            sheetSelectionSection.classList.add('hidden');
+            sheetTabsContainer.innerHTML = '';
+            dataSection.classList.add('hidden');
+            actionsReportSection.classList.add('hidden');
+            togglePasteArea(false); 
+            resetAllFilters(); 
+            tableHeader.innerHTML = ''; 
+            tableBody.innerHTML = '';
+            noDataMessage.classList.remove('hidden');
+            noDataMessage.textContent = 'Upload an Excel file to begin.';
+            tableContainer.classList.add('hidden');
+            reportArea.innerHTML = '<p>Upload and filter data to see a report.</p>';
+            currentSheetNameDisplay.textContent = '';
+            reportSheetNameDisplay.textContent = '';
+            if (document.getElementById('messageArea')) {
+                document.getElementById('messageArea').textContent = '';
+            }
+            closeFilterModal();
+        }
+        // Initial state
+        resetUI();
+    </script>
+</body>
+</html>
