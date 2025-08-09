@@ -1,7 +1,7 @@
 
 # Excel-Data-Filter-Report-Tool 📊✨
 
-https://mddaudibrahim.github.io/Excel-Data-Filter-Report-Tool/
+Live---> https://mddaudibrahim.github.io/Excel-Data-Filter-Report-Tool/
 
 Live on Netlify---->  https://excle-data-management.netlify.app/
 
@@ -35,17 +35,13 @@ Say goodbye to heavy desktop software for simple data exploration! This tool pro
 
 ## 📸 Showcase
 
-Showcase the power of the Excel-Data-Filter-Report-Tool in action!
+<img width="1920" height="871" alt="image" src="https://github.com/user-attachments/assets/2e783bfe-5aaa-4292-8f2e-b4382f33fdab" />
 
-_Coming Soon: Add screenshots or a short GIF demonstrating file upload, filtering, and sorting functionality here!_
+<img width="1888" height="898" alt="image" src="https://github.com/user-attachments/assets/4045f054-a301-4aef-acc6-8e071051f357" />
 
-![App Screenshot](path/to/screenshot.png)
-_A placeholder for your application's main interface._
+<img width="1862" height="877" alt="image" src="https://github.com/user-attachments/assets/904d72e9-d06e-4bb8-9d4b-a904237c8d4b" />
 
-![Filtering Demo](path/to/filtering-demo.gif)
-_A short animation showing the interactive filtering in action._
 
----
 
 ## 🛠️ Tech Stack & Tools
 
