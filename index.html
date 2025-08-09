@@ -34,20 +34,41 @@
         .filter-sort-icons {
             display: flex;
             align-items: center;
+            gap: 4px;
         }
         .filter-btn, .sort-btn {
-            background: none;
-            border: none;
-            padding: 4px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 6px 8px;
             cursor: pointer;
-            color: #555;
+            color: #495057;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 28px;
         }
         .filter-btn:hover, .sort-btn:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
             color: #007bff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .filter-btn.active {
-            color: #007bff;
-            font-weight: bold;
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+        }
+        .filter-btn.active:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+            color: white;
         }
         .column-filter-input {
             width: 100%;
@@ -66,6 +87,28 @@
             width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #f0f0f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #3498db;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            animation: progressPulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes progressPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
         
         .modal {
             position: fixed; inset: 0; background-color: rgba(0,0,0,0.5);
@@ -89,8 +132,122 @@
         .modal-actions { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
         .modal-footer { display:flex; justify-content:flex-end; gap:10px; }
 
+        .column-duplicate-filter {
+            background-color: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .column-duplicate-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .column-duplicate-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #0c5460;
+            cursor: pointer;
+            flex-grow: 1;
+        }
+        
+        .column-duplicate-badge {
+            background-color: #17a2b8;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            padding: 2rem 0;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .footer-name {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .footer-link {
+            color: #3b82f6;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
         .sort-icon-asc::after { content: " ▲"; font-size: 0.7em; }
         .sort-icon-desc::after { content: " ▼"; font-size: 0.7em; }
+
+        .delete-row-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+            min-width: 60px;
+        }
+        .delete-row-btn:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+        .row-actions-column {
+            width: 80px;
+            text-align: center;
+        }
+
+        .duplicate-filter-section {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .duplicate-filter-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .duplicate-filter-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #856404;
+            cursor: pointer;
+            flex-grow: 1;
+        }
+        
+        .duplicate-count-badge {
+            background-color: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
 
         #sheetTabsContainer {
             margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0;
@@ -137,9 +294,27 @@
             <div id="sheetTabsContainer"></div>
         </section>
 
-        <section id="dataSection" class="mb-8 hidden">
+            <section id="dataSection" class="mb-8 hidden">
             <h2 class="text-xl font-semibold text-gray-700 mb-3">2. Filter and View Data (<span id="currentSheetName" class="font-normal"></span>)</h2>
             <p class="text-sm text-gray-500 mb-4">Data values are shown as formatted. Formulas are preserved on export but do not recalculate here.</p>
+            
+            <!-- Performance Info Panel -->
+            <div id="performanceInfo" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 hidden">
+                <div class="flex items-center justify-between">
+                    <span>📊 Dataset: <span id="totalRowsCount">0</span> rows | Displayed: <span id="displayedRowsCount">0</span> rows</span>
+                    <span id="performanceMode" class="text-xs bg-blue-200 px-2 py-1 rounded">Standard Mode</span>
+                </div>
+            </div>
+            
+            <!-- Duplicate Filter Section -->
+            <div id="duplicateFilterSection" class="duplicate-filter-section hidden">
+                <input type="checkbox" id="removeDuplicatesCheckbox" class="duplicate-filter-checkbox">
+                <label for="removeDuplicatesCheckbox" class="duplicate-filter-label">
+                    Remove Duplicate Rows
+                </label>
+                <span id="duplicateCountBadge" class="duplicate-count-badge hidden">0 duplicates</span>
+            </div>
+            
             <div id="tableContainer" class="table-container max-h-[600px] overflow-auto rounded-lg shadow border border-gray-200">
                 <table id="dataTable" class="min-w-full bg-white">
                     <thead id="tableHeader"></thead>
@@ -183,6 +358,11 @@
         </section>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div>Developed By <a href="https://daudibrahim.com/" target="_blank" class="footer-link">Daud Ibrahim</a> © 2025</div>
+    </footer>
+
     <div id="filterModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -191,6 +371,16 @@
             </div>
             <div class="modal-body">
                 <input type="text" id="filterModalSearch" class="modal-search-input" placeholder="Search values...">
+                
+                <!-- Column Duplicate Filter Section -->
+                <div id="columnDuplicateFilter" class="column-duplicate-filter hidden">
+                    <input type="checkbox" id="columnRemoveDuplicatesCheckbox" class="column-duplicate-checkbox">
+                    <label for="columnRemoveDuplicatesCheckbox" class="column-duplicate-label">
+                        Show only unique values for this column
+                    </label>
+                    <span id="columnDuplicateBadge" class="column-duplicate-badge hidden">0 duplicates</span>
+                </div>
+                
                 <div id="filterModalCheckboxes" class="modal-checkbox-list"></div>
             </div>
             <div class="modal-actions">
@@ -236,6 +426,16 @@
         const filterModalDeselectAll = document.getElementById('filterModalDeselectAll');
         const filterModalCancel = document.getElementById('filterModalCancel');
         const filterModalApply = document.getElementById('filterModalApply');
+        const duplicateFilterSection = document.getElementById('duplicateFilterSection');
+        const removeDuplicatesCheckbox = document.getElementById('removeDuplicatesCheckbox');
+        const duplicateCountBadge = document.getElementById('duplicateCountBadge');
+        const columnDuplicateFilter = document.getElementById('columnDuplicateFilter');
+        const columnRemoveDuplicatesCheckbox = document.getElementById('columnRemoveDuplicatesCheckbox');
+        const columnDuplicateBadge = document.getElementById('columnDuplicateBadge');
+        const performanceInfo = document.getElementById('performanceInfo');
+        const totalRowsCount = document.getElementById('totalRowsCount');
+        const displayedRowsCount = document.getElementById('displayedRowsCount');
+        const performanceMode = document.getElementById('performanceMode');
 
         // Data stores
         let currentWorkbook = null; 
@@ -246,7 +446,19 @@
         let filteredData = []; 
         let activeTextFilters = {}; 
         let activeValueFilters = {}; 
+        let activeColumnDuplicateFilters = {}; // Track which columns have duplicate filtering enabled
         let currentFilteringColumn = -1; 
+        let removeDuplicatesEnabled = false;
+        let duplicateCount = 0;
+        
+        // Performance optimization variables
+        let isVirtualScrollingEnabled = false;
+        let virtualScrollContainer = null;
+        let visibleRowsStart = 0;
+        let visibleRowsEnd = 0;
+        let rowHeight = 40;
+        let maxVisibleRows = 100;
+        let debounceTimeout = null; 
 
         // --- Event Listeners ---
         excelFileInput.addEventListener('change', handleFileUpload);
@@ -261,6 +473,8 @@
         filterModalSearch.addEventListener('input', handleModalSearch);
         filterModalSelectAll.addEventListener('click', () => toggleAllModalCheckboxes(true));
         filterModalDeselectAll.addEventListener('click', () => toggleAllModalCheckboxes(false));
+        removeDuplicatesCheckbox.addEventListener('change', handleRemoveDuplicatesToggle);
+        columnRemoveDuplicatesCheckbox.addEventListener('change', handleColumnDuplicateToggle);
 
         // --- File Upload ---
         function handleFileUpload(event) {
@@ -330,46 +544,68 @@
                 setupTable(); // Attempt to clear/update table
                 return;
             }
-            currentSheetName = sheetName;
-            currentSheetNameDisplay.textContent = sheetName; 
-            reportSheetNameDisplay.textContent = sheetName; 
-
-            const tabs = sheetTabsContainer.querySelectorAll('.sheet-tab');
-            tabs.forEach(tab => {
-                if (tab.dataset.sheetName === sheetName) tab.classList.add('active');
-                else tab.classList.remove('active');
-            });
-
-            const worksheet = currentWorkbook.Sheets[sheetName];
-            const newOriginalData = [];
-            if (!worksheet || !worksheet['!ref']) {
-                 showMessage(`Sheet "${sheetName}" is empty or invalid.`, 'text-yellow-600');
-            } else {
-                const range = XLSX.utils.decode_range(worksheet['!ref']);
-                for (let R = range.s.r; R <= range.e.r; ++R) {
-                    const row = [];
-                    for (let C = range.s.c; C <= range.e.c; ++C) {
-                        const cell_address = { c: C, r: R };
-                        const cell_ref = XLSX.utils.encode_cell(cell_address);
-                        const cell = worksheet[cell_ref]; // This is the raw cell object from SheetJS
-                        
-                        let cellData = { v: undefined, w: "", f: undefined }; // Default cell object structure
-                        if (cell) {
-                            cellData.v = cell.v; // Raw value
-                            cellData.w = cell.w !== undefined ? String(cell.w) : (cell.v !== undefined ? String(cell.v) : ""); // Formatted text or raw value as string
-                            if (cell.f) cellData.f = cell.f; // Formula string
-                        }
-                        row.push(cellData);
-                    }
-                    newOriginalData.push(row);
-                }
-            }
-            originalData = newOriginalData; // Assign the newly parsed data
             
-            resetAllFilters(); 
-            setupTable(); 
-            togglePasteArea(false); 
-            showMessage(`Displaying data from sheet: "${sheetName}". Values shown; formulas preserved for export.`, 'text-blue-600');
+            // Show progress for large sheets
+            showMessage('Loading sheet data...', 'text-blue-600');
+            loader.classList.remove('hidden');
+            
+            // Use setTimeout to prevent UI blocking
+            setTimeout(() => {
+                currentSheetName = sheetName;
+                currentSheetNameDisplay.textContent = sheetName; 
+                reportSheetNameDisplay.textContent = sheetName; 
+
+                const tabs = sheetTabsContainer.querySelectorAll('.sheet-tab');
+                tabs.forEach(tab => {
+                    if (tab.dataset.sheetName === sheetName) tab.classList.add('active');
+                    else tab.classList.remove('active');
+                });
+
+                const worksheet = currentWorkbook.Sheets[sheetName];
+                const newOriginalData = [];
+                if (!worksheet || !worksheet['!ref']) {
+                     showMessage(`Sheet "${sheetName}" is empty or invalid.`, 'text-yellow-600');
+                } else {
+                    const range = XLSX.utils.decode_range(worksheet['!ref']);
+                    const totalCells = (range.e.r - range.s.r + 1) * (range.e.c - range.s.c + 1);
+                    
+                    // Process data in chunks for large sheets
+                    const chunkSize = 1000;
+                    let processedCells = 0;
+                    
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                        const row = [];
+                        for (let C = range.s.c; C <= range.e.c; ++C) {
+                            const cell_address = { c: C, r: R };
+                            const cell_ref = XLSX.utils.encode_cell(cell_address);
+                            const cell = worksheet[cell_ref]; // This is the raw cell object from SheetJS
+                            
+                            let cellData = { v: undefined, w: "", f: undefined }; // Default cell object structure
+                            if (cell) {
+                                cellData.v = cell.v; // Raw value
+                                cellData.w = cell.w !== undefined ? String(cell.w) : (cell.v !== undefined ? String(cell.v) : ""); // Formatted text or raw value as string
+                                if (cell.f) cellData.f = cell.f; // Formula string
+                            }
+                            row.push(cellData);
+                            processedCells++;
+                        }
+                        newOriginalData.push(row);
+                        
+                        // Show progress for large datasets
+                        if (totalCells > 10000 && processedCells % chunkSize === 0) {
+                            const progress = Math.round((processedCells / totalCells) * 100);
+                            showMessage(`Loading sheet data... ${progress}%`, 'text-blue-600');
+                        }
+                    }
+                }
+                originalData = newOriginalData; // Assign the newly parsed data
+                
+                resetAllFilters(); 
+                setupTable(); 
+                togglePasteArea(false); 
+                loader.classList.add('hidden');
+                showMessage(`Displaying data from sheet: "${sheetName}". Values shown; formulas preserved for export.`, 'text-blue-600');
+            }, 10);
         }
 
         // --- Paste Data Logic ---
@@ -440,13 +676,44 @@
             noDataMessage.classList.add('hidden');
         }
         
+        function updatePerformanceInfo(totalRows, displayedRows, mode = 'Standard Mode') {
+            if (totalRows > 0) {
+                performanceInfo.classList.remove('hidden');
+                totalRowsCount.textContent = totalRows.toLocaleString();
+                displayedRowsCount.textContent = displayedRows.toLocaleString();
+                performanceMode.textContent = mode;
+                
+                // Update mode styling
+                performanceMode.className = 'text-xs px-2 py-1 rounded';
+                if (mode.includes('Virtual')) {
+                    performanceMode.classList.add('bg-green-200', 'text-green-800');
+                } else {
+                    performanceMode.classList.add('bg-blue-200', 'text-blue-800');
+                }
+            } else {
+                performanceInfo.classList.add('hidden');
+            }
+        }
+
         function resetAllFilters() {
             activeTextFilters = {};
             activeValueFilters = {};
+            activeColumnDuplicateFilters = {};
+            removeDuplicatesEnabled = false;
+            removeDuplicatesCheckbox.checked = false;
+            duplicateCount = 0;
+            isVirtualScrollingEnabled = false;
+            
+            // Reset table body styling to original
+            tableBody.style.height = 'auto';
+            tableBody.style.position = 'static';
+            
             const allFilterBtns = tableHeader.querySelectorAll('.filter-btn.active');
             allFilterBtns.forEach(btn => btn.classList.remove('active'));
             const allTextFilterInputs = tableHeader.querySelectorAll('.column-filter-input');
             allTextFilterInputs.forEach(input => input.value = '');
+            duplicateFilterSection.classList.add('hidden');
+            updatePerformanceInfo(0, 0);
         }
 
         function setupTable() {
@@ -463,6 +730,7 @@
             const headerCells = originalData[0] || [];
             const headerTexts = headerCells.map(cellObj => cellObj.w !== undefined ? cellObj.w : (cellObj.v !== undefined ? String(cellObj.v) : ""));
             setupTableHeaders(headerTexts); 
+            detectAndShowDuplicates(); // Check for duplicates and show filter if needed
             applyAllFilters(); 
         }
 
@@ -478,6 +746,12 @@
                 return;
             }
 
+            // Add Actions column header first
+            const actionsHeader = document.createElement('th');
+            actionsHeader.className = 'row-actions-column';
+            actionsHeader.textContent = 'Actions';
+            headerRow.appendChild(actionsHeader);
+
             headerTextsArray.forEach((headerText, index) => {
                 const th = document.createElement('th');
                 const headerContentDiv = document.createElement('div');
@@ -489,7 +763,7 @@
                 iconsDiv.className = 'filter-sort-icons';
                 const filterBtn = document.createElement('button');
                 filterBtn.className = 'filter-btn';
-                filterBtn.innerHTML = '&#x1F5B9;'; 
+                filterBtn.innerHTML = '🔽'; 
                 filterBtn.title = 'Advanced Filter';
                 filterBtn.dataset.columnIndex = index;
                 filterBtn.onclick = () => openFilterModal(index);
@@ -529,9 +803,14 @@
             const input = event.target;
             const columnIndex = parseInt(input.dataset.columnIndex);
             const filterValue = input.value.toLowerCase().trim();
-            if (filterValue) activeTextFilters[columnIndex] = filterValue;
-            else delete activeTextFilters[columnIndex];
-            applyAllFilters();
+            
+            // Debounce the filter input to avoid excessive filtering on large datasets
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                if (filterValue) activeTextFilters[columnIndex] = filterValue;
+                else delete activeTextFilters[columnIndex];
+                applyAllFilters();
+            }, 300); // 300ms delay
         }
 
         function openFilterModal(columnIndex) {
@@ -544,21 +823,60 @@
             const headerText = headerCell.w || String(headerCell.v) || `Column ${columnIndex + 1}`;
             filterModalTitle.textContent = `Filter: ${headerText} (Sheet: ${currentSheetName})`;
 
+            // Collect all values for this column with performance optimization
+            const allColumnValues = [];
             const uniqueValues = new Set();
+            const maxValuesToProcess = 10000; // Limit for very large datasets
+            
             if (originalData.length > 1) { 
-                for (let i = 1; i < originalData.length; i++) { 
+                const dataLength = Math.min(originalData.length - 1, maxValuesToProcess);
+                for (let i = 1; i <= dataLength; i++) { 
                     if (originalData[i] && originalData[i][columnIndex]) {
                          const cell = originalData[i][columnIndex];
-                         uniqueValues.add(cell.w !== undefined ? cell.w : (cell.v !== undefined ? String(cell.v) : ""));
+                         const cellValue = cell.w !== undefined ? cell.w : (cell.v !== undefined ? String(cell.v) : "");
+                         allColumnValues.push(cellValue);
+                         uniqueValues.add(cellValue);
                     } else {
+                         allColumnValues.push("");
                          uniqueValues.add(""); 
                     }
                 }
             }
-            const sortedUniqueValues = Array.from(uniqueValues).sort((a,b) => String(a).localeCompare(String(b), undefined, {numeric: true, sensitivity: 'base'}));
+
+            // Calculate duplicates for this column
+            const valueCounts = {};
+            allColumnValues.forEach(value => {
+                valueCounts[value] = (valueCounts[value] || 0) + 1;
+            });
+            const columnDuplicateCount = allColumnValues.length - uniqueValues.size;
+
+            // Show/hide and configure column duplicate filter
+            if (columnDuplicateCount > 0) {
+                columnDuplicateFilter.classList.remove('hidden');
+                columnDuplicateBadge.textContent = `${columnDuplicateCount} duplicate${columnDuplicateCount > 1 ? 's' : ''}`;
+                columnDuplicateBadge.classList.remove('hidden');
+                columnRemoveDuplicatesCheckbox.checked = activeColumnDuplicateFilters[columnIndex] || false;
+            } else {
+                columnDuplicateFilter.classList.add('hidden');
+                columnRemoveDuplicatesCheckbox.checked = false;
+            }
+            
+            // Optimize sorting for large datasets
+            const sortedUniqueValues = Array.from(uniqueValues).sort((a,b) => {
+                if (uniqueValues.size > 1000) {
+                    // Simple string comparison for very large datasets
+                    return String(a).localeCompare(String(b));
+                } else {
+                    // More sophisticated sorting for smaller datasets
+                    return String(a).localeCompare(String(b), undefined, {numeric: true, sensitivity: 'base'});
+                }
+            });
+            
             filterModalCheckboxes.innerHTML = '';
             const currentSelections = activeValueFilters[columnIndex] || new Set();
 
+            // Use document fragment for better performance when adding many elements
+            const fragment = document.createDocumentFragment();
             sortedUniqueValues.forEach(value => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'modal-checkbox-item';
@@ -570,8 +888,9 @@
                 label.appendChild(checkbox);
                 label.appendChild(document.createTextNode(value === "" ? "(Blanks)" : value));
                 itemDiv.appendChild(label);
-                filterModalCheckboxes.appendChild(itemDiv);
+                fragment.appendChild(itemDiv);
             });
+            filterModalCheckboxes.appendChild(fragment);
             
             filterModalSearch.value = '';
             filterModal.classList.remove('hidden');
@@ -603,6 +922,17 @@
                 activeValueFilters[currentFilteringColumn] = selectedValues;
                 updateFilterButtonActiveState(currentFilteringColumn, true);
             }
+
+            // Handle column duplicate filter
+            if (columnRemoveDuplicatesCheckbox.checked) {
+                activeColumnDuplicateFilters[currentFilteringColumn] = true;
+            } else {
+                delete activeColumnDuplicateFilters[currentFilteringColumn];
+            }
+
+            // Update filter button state if any filter is active on this column
+            const hasAnyFilter = activeValueFilters[currentFilteringColumn] || activeColumnDuplicateFilters[currentFilteringColumn];
+            updateFilterButtonActiveState(currentFilteringColumn, hasAnyFilter);
             applyAllFilters();
             closeFilterModal();
         }
@@ -626,6 +956,17 @@
             });
         }
 
+        // --- Column Duplicate Filter Handler ---
+        function handleColumnDuplicateToggle(event) {
+            // This will be handled in applyModalFilter, just provide visual feedback
+            const isChecked = event.target.checked;
+            if (isChecked) {
+                columnDuplicateBadge.style.opacity = '0.6';
+            } else {
+                columnDuplicateBadge.style.opacity = '1';
+            }
+        }
+
         function applyAllFilters() {
             if (originalData.length === 0) { 
                 filteredData = [];
@@ -633,35 +974,215 @@
                 updateReport(filteredData);
                 return;
             }
-            const headersRowObjects = originalData[0] ? originalData[0] : []; // Array of cell objects
-            const dataContentRowsObjects = originalData.length > 1 ? originalData.slice(1) : []; // Array of arrays of cell objects
+            
+            // Show loading indicator for large datasets
+            const isLargeDataset = originalData.length > 1000;
+            if (isLargeDataset) {
+                showMessage('Processing filters...', 'text-blue-600');
+                loader.classList.remove('hidden');
+            }
+            
+            // Use setTimeout to prevent UI blocking for large datasets
+            const processFiltering = () => {
+                const headersRowObjects = originalData[0] ? originalData[0] : []; // Array of cell objects
+                const dataContentRowsObjects = originalData.length > 1 ? originalData.slice(1) : []; // Array of arrays of cell objects
 
-            const newFilteredRowsObjects = dataContentRowsObjects.filter(rowOfCellObjects => {
-                if (!rowOfCellObjects) return false; 
-                for (const colIndexStr in activeTextFilters) {
-                    const colIndex = parseInt(colIndexStr);
-                    const filterValue = activeTextFilters[colIndex];
-                    const cellObj = rowOfCellObjects[colIndex];
-                    const cellFormattedText = cellObj && cellObj.w !== undefined ? String(cellObj.w).toLowerCase() : 
-                                           (cellObj && cellObj.v !== undefined ? String(cellObj.v).toLowerCase() : "");
-                    if (!cellFormattedText.includes(filterValue)) return false;
-                }
-                for (const colIndexStr in activeValueFilters) {
-                    const colIndex = parseInt(colIndexStr);
-                    const selectedValuesSet = activeValueFilters[colIndex];
-                    if (selectedValuesSet && selectedValuesSet.size > 0) { 
+                const newFilteredRowsObjects = dataContentRowsObjects.filter(rowOfCellObjects => {
+                    if (!rowOfCellObjects) return false; 
+                    
+                    // Optimize text filtering
+                    for (const colIndexStr in activeTextFilters) {
+                        const colIndex = parseInt(colIndexStr);
+                        const filterValue = activeTextFilters[colIndex];
                         const cellObj = rowOfCellObjects[colIndex];
-                        const cellFormattedText = cellObj && cellObj.w !== undefined ? String(cellObj.w) : 
-                                               (cellObj && cellObj.v !== undefined ? String(cellObj.v) : "");
-                        if (!selectedValuesSet.has(cellFormattedText)) return false;
+                        const cellFormattedText = cellObj && cellObj.w !== undefined ? String(cellObj.w).toLowerCase() : 
+                                               (cellObj && cellObj.v !== undefined ? String(cellObj.v).toLowerCase() : "");
+                        if (!cellFormattedText.includes(filterValue)) return false;
+                    }
+                    
+                    // Optimize value filtering
+                    for (const colIndexStr in activeValueFilters) {
+                        const colIndex = parseInt(colIndexStr);
+                        const selectedValuesSet = activeValueFilters[colIndex];
+                        if (selectedValuesSet && selectedValuesSet.size > 0) { 
+                            const cellObj = rowOfCellObjects[colIndex];
+                            const cellFormattedText = cellObj && cellObj.w !== undefined ? String(cellObj.w) : 
+                                                   (cellObj && cellObj.v !== undefined ? String(cellObj.v) : "");
+                            if (!selectedValuesSet.has(cellFormattedText)) return false;
+                        }
+                    }
+                    return true;
+                });
+
+                filteredData = [headersRowObjects, ...newFilteredRowsObjects]; 
+
+                // Apply column-specific duplicate filtering
+                let finalDataRows = newFilteredRowsObjects;
+                if (Object.keys(activeColumnDuplicateFilters).length > 0) {
+                    const columnUniqueTracker = {}; // Track unique values per column
+                    
+                    // Initialize trackers for columns with duplicate filtering enabled
+                    Object.keys(activeColumnDuplicateFilters).forEach(colIndexStr => {
+                        columnUniqueTracker[colIndexStr] = new Set();
+                    });
+
+                    finalDataRows = newFilteredRowsObjects.filter(rowOfCellObjects => {
+                        let includeRow = true;
+                        
+                        // Check each column that has duplicate filtering enabled
+                        for (const colIndexStr in activeColumnDuplicateFilters) {
+                            const colIndex = parseInt(colIndexStr);
+                            const cellObj = rowOfCellObjects[colIndex];
+                            const cellValue = cellObj && cellObj.w !== undefined ? String(cellObj.w) : 
+                                             (cellObj && cellObj.v !== undefined ? String(cellObj.v) : "");
+                            
+                            if (columnUniqueTracker[colIndexStr].has(cellValue)) {
+                                includeRow = false; // This is a duplicate for this column
+                                break;
+                            } else {
+                                columnUniqueTracker[colIndexStr].add(cellValue);
+                            }
+                        }
+                        
+                        return includeRow;
+                    });
+                    
+                    filteredData = [headersRowObjects, ...finalDataRows];
+                }
+
+                // Apply row-level duplicate removal if enabled
+                if (removeDuplicatesEnabled && finalDataRows.length > 0) {
+                    const uniqueRows = [];
+                    const seenRows = new Set();
+                    
+                    finalDataRows.forEach(rowOfCellObjects => {
+                        // Create a string representation of the row for comparison
+                        const rowString = rowOfCellObjects.map(cellObj => 
+                            cellObj && cellObj.w !== undefined ? String(cellObj.w) : 
+                            (cellObj && cellObj.v !== undefined ? String(cellObj.v) : "")
+                        ).join('|');
+                        
+                        if (!seenRows.has(rowString)) {
+                            seenRows.add(rowString);
+                            uniqueRows.push(rowOfCellObjects);
+                        }
+                    });
+                    
+                    duplicateCount = finalDataRows.length - uniqueRows.length;
+                    finalDataRows = uniqueRows;
+                    filteredData = [headersRowObjects, ...uniqueRows];
+                    updateDuplicateCountBadge();
+                } else {
+                    duplicateCount = 0;
+                    updateDuplicateCountBadge();
+                }
+
+                renderTableBody(finalDataRows); // Pass only data rows (as objects)
+                updateReport(filteredData);
+                
+                if (isLargeDataset) {
+                    loader.classList.add('hidden');
+                    showMessage(`Filtering complete. Displaying ${finalDataRows.length} rows.`, 'text-green-600');
+                }
+            };
+            
+            if (isLargeDataset) {
+                // Use setTimeout to prevent UI blocking
+                setTimeout(processFiltering, 10);
+            } else {
+                processFiltering();
+            }
+        }
+
+        // --- Duplicate Removal Functions ---
+        function handleRemoveDuplicatesToggle(event) {
+            removeDuplicatesEnabled = event.target.checked;
+            applyAllFilters(); // Re-apply all filters with or without duplicate removal
+            
+            if (removeDuplicatesEnabled && duplicateCount > 0) {
+                showMessage(`Duplicate removal enabled. ${duplicateCount} duplicate rows hidden.`, 'text-blue-600', true);
+            } else if (removeDuplicatesEnabled && duplicateCount === 0) {
+                showMessage('Duplicate removal enabled. No duplicates found.', 'text-blue-600', true);
+            } else {
+                showMessage('Duplicate removal disabled. All rows shown.', 'text-gray-600', true);
+            }
+        }
+
+        function updateDuplicateCountBadge() {
+            if (duplicateCount > 0) {
+                duplicateCountBadge.textContent = `${duplicateCount} duplicate${duplicateCount > 1 ? 's' : ''}`;
+                duplicateCountBadge.classList.remove('hidden');
+            } else {
+                duplicateCountBadge.classList.add('hidden');
+            }
+        }
+
+        function detectAndShowDuplicates() {
+            if (originalData.length <= 1) {
+                duplicateFilterSection.classList.add('hidden');
+                return;
+            }
+
+            // Show progress for large datasets
+            const dataContentRowsObjects = originalData.slice(1); // Skip header
+            const isLargeDataset = dataContentRowsObjects.length > 5000;
+            
+            if (isLargeDataset) {
+                showMessage('Analyzing data for duplicates...', 'text-blue-600');
+            }
+            
+            // Use setTimeout for large datasets to prevent UI blocking
+            const processDuplicateDetection = () => {
+                const seenRows = new Set();
+                let totalDuplicates = 0;
+                
+                // Process in chunks for better performance
+                const chunkSize = 1000;
+                let processedRows = 0;
+                
+                for (let i = 0; i < dataContentRowsObjects.length; i++) {
+                    const rowOfCellObjects = dataContentRowsObjects[i];
+                    const rowString = rowOfCellObjects.map(cellObj => 
+                        cellObj && cellObj.w !== undefined ? String(cellObj.w) : 
+                        (cellObj && cellObj.v !== undefined ? String(cellObj.v) : "")
+                    ).join('|');
+                    
+                    if (seenRows.has(rowString)) {
+                        totalDuplicates++;
+                    } else {
+                        seenRows.add(rowString);
+                    }
+                    
+                    processedRows++;
+                    
+                    // Show progress for very large datasets
+                    if (isLargeDataset && processedRows % chunkSize === 0) {
+                        const progress = Math.round((processedRows / dataContentRowsObjects.length) * 100);
+                        showMessage(`Analyzing duplicates... ${progress}%`, 'text-blue-600');
                     }
                 }
-                return true;
-            });
 
-            filteredData = [headersRowObjects, ...newFilteredRowsObjects]; 
-            renderTableBody(newFilteredRowsObjects); // Pass only data rows (as objects)
-            updateReport(filteredData); 
+                if (totalDuplicates > 0) {
+                    duplicateFilterSection.classList.remove('hidden');
+                    if (!removeDuplicatesEnabled) {
+                        duplicateCount = totalDuplicates;
+                        updateDuplicateCountBadge();
+                    }
+                } else {
+                    duplicateFilterSection.classList.add('hidden');
+                    duplicateCount = 0;
+                }
+                
+                if (isLargeDataset) {
+                    showMessage(`Duplicate analysis complete. Found ${totalDuplicates} duplicates.`, 'text-green-600');
+                }
+            };
+            
+            if (isLargeDataset) {
+                setTimeout(processDuplicateDetection, 10);
+            } else {
+                processDuplicateDetection();
+            }
         }
 
         function renderTableBody(dataRowsOfCellObjects) {
@@ -713,20 +1234,128 @@
             noDataMessage.classList.add('hidden');
             tableContainer.classList.remove('hidden');
 
-            dataRowsOfCellObjects.forEach(rowArrayOfCellObjects => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50';
-                if (Array.isArray(rowArrayOfCellObjects)) {
-                    rowArrayOfCellObjects.forEach(cellObj => {
-                        const td = document.createElement('td');
-                        td.className = 'p-3 text-sm text-gray-600 whitespace-nowrap';
-                        // Display formatted text 'w', fallback to 'v'
-                        td.textContent = cellObj.w !== undefined ? cellObj.w : (cellObj.v !== undefined ? String(cellObj.v) : '');
-                        tr.appendChild(td);
-                    });
-                }
-                tableBody.appendChild(tr);
+            // Use normal table rendering for clean design
+            renderNormalTable(dataRowsOfCellObjects);
+        }
+
+        function renderNormalTable(dataRowsOfCellObjects) {
+            const fragment = document.createDocumentFragment();
+            
+            dataRowsOfCellObjects.forEach((rowArrayOfCellObjects, rowIndex) => {
+                const tr = createTableRow(rowArrayOfCellObjects, rowIndex);
+                fragment.appendChild(tr);
             });
+            
+            tableBody.appendChild(fragment);
+            
+            // Update performance info
+            const totalRows = originalData.length > 0 ? originalData.length - 1 : 0; // Exclude header
+            updatePerformanceInfo(totalRows, dataRowsOfCellObjects.length, 'Standard Mode');
+        }
+
+        function renderVirtualizedTable(dataRowsOfCellObjects) {
+            // For now, let's use normal rendering to preserve design
+            // Virtual scrolling can be added back later if needed
+            renderNormalTable(dataRowsOfCellObjects);
+            
+            // Update performance info
+            const totalRows = originalData.length > 0 ? originalData.length - 1 : 0; // Exclude header
+            updatePerformanceInfo(totalRows, dataRowsOfCellObjects.length, `Standard Mode (${dataRowsOfCellObjects.length} rows)`);
+        }
+
+        function createTableRow(rowArrayOfCellObjects, rowIndex) {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50';
+            tr.dataset.originalRowIndex = getOriginalRowIndex(rowArrayOfCellObjects);
+            
+            // Add delete button as first column
+            const deleteCell = document.createElement('td');
+            deleteCell.className = 'row-actions-column p-3 text-sm';
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-row-btn';
+            deleteBtn.innerHTML = '🗑️';
+            deleteBtn.title = 'Delete Row';
+            deleteBtn.onclick = () => deleteRow(tr.dataset.originalRowIndex);
+            deleteCell.appendChild(deleteBtn);
+            tr.appendChild(deleteCell);
+            
+            if (Array.isArray(rowArrayOfCellObjects)) {
+                rowArrayOfCellObjects.forEach(cellObj => {
+                    const td = document.createElement('td');
+                    td.className = 'p-3 text-sm text-gray-600 whitespace-nowrap';
+                    // Display formatted text 'w', fallback to 'v'
+                    td.textContent = cellObj.w !== undefined ? cellObj.w : (cellObj.v !== undefined ? String(cellObj.v) : '');
+                    tr.appendChild(td);
+                });
+            }
+            
+            return tr;
+        }
+
+        // --- Row Deletion Functions ---
+        function getOriginalRowIndex(rowArrayOfCellObjects) {
+            // Find the index of this row in the original data
+            for (let i = 0; i < originalData.length; i++) {
+                if (originalData[i] === rowArrayOfCellObjects) {
+                    return i;
+                }
+                // If not the same reference, check if the content matches
+                if (originalData[i].length === rowArrayOfCellObjects.length) {
+                    let match = true;
+                    for (let j = 0; j < rowArrayOfCellObjects.length; j++) {
+                        if (originalData[i][j].v !== rowArrayOfCellObjects[j].v || 
+                            originalData[i][j].w !== rowArrayOfCellObjects[j].w) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) return i;
+                }
+            }
+            return -1; // Not found
+        }
+
+        function deleteRow(originalRowIndex) {
+            if (originalRowIndex === undefined || originalRowIndex < 0 || originalRowIndex >= originalData.length) {
+                showMessage('Error: Could not determine which row to delete.', 'text-red-600', true);
+                return;
+            }
+
+            // Don't allow deleting the header row (index 0)
+            if (originalRowIndex === 0) {
+                showMessage('Cannot delete the header row.', 'text-yellow-600', true);
+                return;
+            }
+
+            // Confirm deletion
+            const rowData = originalData[originalRowIndex];
+            const rowPreview = rowData.slice(0, 3).map(cell => cell.w || cell.v || '').join(', ');
+            if (!confirm(`Are you sure you want to delete this row?\n\nRow ${originalRowIndex + 1}: ${rowPreview}${rowData.length > 3 ? '...' : ''}`)) {
+                return;
+            }
+
+            // Remove the row from originalData
+            originalData.splice(originalRowIndex, 1);
+
+            // Update the workbook if it exists
+            if (currentWorkbook && currentWorkbook.Sheets[currentSheetName]) {
+                const dataForSheetJS = originalData.map(row => 
+                    row.map(cellObj => {
+                        if (cellObj.f) {
+                            // For formula cells, create proper cell object
+                            return { v: cellObj.v, f: cellObj.f };
+                        } else {
+                            return cellObj.v; // Just the value for non-formula cells
+                        }
+                    })
+                );
+                const newSheet = XLSX.utils.aoa_to_sheet(dataForSheetJS);
+                currentWorkbook.Sheets[currentSheetName] = newSheet;
+            }
+
+            // Re-render the table
+            setupTable();
+            showMessage(`Row ${originalRowIndex + 1} deleted successfully.`, 'text-green-600', true);
         }
 
         function handleExport() {
